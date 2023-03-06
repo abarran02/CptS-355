@@ -15,12 +15,9 @@ def aggregate_log(data: dict) -> dict:
      for week in data.values():
           # iterate over each day in the course
           for (day, hours) in week.items():
-               if day not in agg:
-                    # add new key and value if not in aggregate log yet
-                    agg[day] = hours
-               else:
-                    # add to existing value if so
-                    agg[day] += hours
+               # get next day and add hours to aggregate
+               cur = agg.get(day, 0)
+               agg[day] = hours + cur
 
      return agg
 
@@ -30,12 +27,9 @@ def combine_dict(dict1: dict, dict2: dict) -> dict:
      combined = dict1.copy()
      # iterate over key value pairs of second dict
      for (k, v) in dict2.items():
-          if k not in combined:
-               # add new key and value if not in combined dict yet
-               combined[k] = v
-          else:
-               # add to existing value if so
-               combined[k] += v
+          # get next key and add to combined dict
+          cur = combined.get(k, 0)
+          combined[k] = v + cur
 
      return combined
 
@@ -46,12 +40,9 @@ def merge_logs(log_list: list) -> dict:
      for log in log_list:
           # iterate of course and week of class log
           for (course, week) in log.items():
-               if course in agg:
-                    # combine week with existing course
-                    agg[course] = combine_dict(agg[course], week)
-               else:
-                    # add new course
-                    agg[course] = week
+               # get next course and combine week data with aggregate
+               cur = agg.get(course, {})
+               agg[course] = combine_dict(cur, week)
      
      return agg
 
