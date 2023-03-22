@@ -44,12 +44,10 @@ class PSOperators:
         Helper function. Pops the top value from opstack and returns it.
     """
     def opPop(self):
-        if len(self.opstack) > 0:
-            x = self.opstack[len(self.opstack) - 1]
-            self.opstack.pop(len(self.opstack) - 1)
-            return x
-        else:
+        if not self.opstack:
             print("Error: opPop - Operand stack is empty")
+        else:
+            return self.opstack.pop()
 
     """
        Helper function. Pushes the given value to the opstack.
@@ -62,13 +60,16 @@ class PSOperators:
        Helper function. Pops the top dictionary from dictstack and returns it.
     """  
     def dictPop(self):
-        pass
+        if not self.dictstack:
+            print("Error: opPop - Operand stack is empty")
+        else:
+            return self.dictstack.pop()
 
     """
        Helper function. Pushes the given dictionary onto the dictstack. 
     """   
     def dictPush(self,d):
-        pass
+        self.dictstack.append(d)
 
     """
        Helper function. Adds name:value pair to the top dictionary in the dictstack.
@@ -96,12 +97,11 @@ class PSOperators:
         for d in reversed(self.dictstack):
             # attempt to return matching value, otherwise iterate
             try:
-                return d[name]
+                return d['/' + name]
             except KeyError:
                 pass
 
-        print(f"Error: lookup failed - {name} not found in dictionary stack")
-        return None
+        print(f"Error: lookup failed - /{name} not found in dictionary stack")
         
     #------- Arithmetic Operators --------------
 
@@ -114,7 +114,9 @@ class PSOperators:
        Pops 2 values from opstack; checks if they are numerical (int); adds them; then pushes the result back to opstack. 
     """  
     def add(self):
-        if len(self.opstack) > 1:
+        if not len(self.opstack) > 1:
+            print("Error: add expects 2 operands")
+        else:
             op2 = self.opPop()
             op1 = self.opPop()
             if self.__bothnum(op1, op2):
@@ -123,14 +125,14 @@ class PSOperators:
                 print("Error: add - one of the operands is not a number value")
                 self.opPush(op1)
                 self.opPush(op2)
-        else:
-            print("Error: add expects 2 operands")
 
     """
        Pops 2 values from opstack; checks if they are numerical (int); subtracts them; and pushes the result back to opstack. 
     """ 
     def sub(self):
-        if len(self.opstack) > 1:
+        if not len(self.opstack) > 1:
+            print("Error: sub expects 2 operands")
+        else:
             op2 = self.opPop()
             op1 = self.opPop()
             if self.__bothnum(op1, op2):
@@ -139,14 +141,14 @@ class PSOperators:
                 print("Error: sub - one of the operands is not a number value")
                 self.opPush(op1)
                 self.opPush(op2)
-        else:
-            print("Error: sub expects 2 operands")
 
     """
         Pops 2 values from opstack; checks if they are numerical (int); multiplies them; and pushes the result back to opstack. 
     """
     def mul(self):
-        if len(self.opstack) > 1:
+        if not len(self.opstack) > 1:
+            print("Error: mul expects 2 operands")
+        else:
             op2 = self.opPop()
             op1 = self.opPop()
             if self.__bothnum(op1, op2):
@@ -155,15 +157,15 @@ class PSOperators:
                 print("Error: mul - one of the operands is not a number value")
                 self.opPush(op1)
                 self.opPush(op2)
-        else:
-            print("Error: mul expects 2 operands")
 
     """
         Pops 2 values from stack; checks if they are int values; calculates the remainder of dividing the bottom value by the top one; 
         pushes the result back to opstack.
     """
     def mod(self):
-        if len(self.opstack) > 1:
+        if not len(self.opstack) > 1:
+            print("Error: mod expects 2 operands")
+        else:
             op2 = self.opPop()
             op1 = self.opPop()
             if self.__bothnum(op1, op2):
@@ -171,9 +173,7 @@ class PSOperators:
             else:
                 print("Error: mod - one of the operands is not a number value")
                 self.opPush(op1)
-                self.opPush(op2)             
-        else:
-            print("Error: mod expects 2 operands")
+                self.opPush(op2)   
 
     def __samevalidtype(self, op1, op2):
         valid = [int, float, bool, StringValue, DictionaryValue]
@@ -186,7 +186,9 @@ class PSOperators:
           - if they are DictionaryValue objects, compares the objects themselves (i.e., ids of the objects).
     """
     def eq(self):
-        if len(self.opstack) > 1:
+        if not len(self.opstack) > 1:
+            print("Error: eq expects 2 operands")
+        else:
             op2 = self.opPop()
             op1 = self.opPop()
             if self.__samevalidtype:
@@ -195,8 +197,6 @@ class PSOperators:
                 print("Error: eq - operands are different or invalid types")
                 self.opPush(op1)
                 self.opPush(op2)
-        else:
-            print("Error: eq expects 2 operands")
 
     """ Pops 2 values from stacks; if the bottom value is less than the second, pushes True back onto stack, otherwise it pushes False.
           - if they are integers or booleans, compares their values. 
@@ -204,7 +204,9 @@ class PSOperators:
           - if they are DictionaryValue objects, compares the objects themselves (i.e., ids of the objects).
     """  
     def lt(self):
-        if len(self.opstack) > 1:
+        if not len(self.opstack) > 1:
+            print("Error: lt expects 2 operands")
+        else:
             op2 = self.opPop()
             op1 = self.opPop()
             if self.__samevalidtype:
@@ -212,10 +214,7 @@ class PSOperators:
             else:
                 print("Error: lt - operands are different or invalid types")
                 self.opPush(op1)
-                self.opPush(op2)     
-        else:
-            print("Error: lt expects 2 operands")
-
+                self.opPush(op2)
 
     """ Pops 2 values from stacks; if the bottom value is greater than the second, pushes True back onto stack, otherwise it pushes False.
           - if they are integers or booleans, compares their values. 
@@ -223,7 +222,9 @@ class PSOperators:
           - if they are DictionaryValue objects, compares the objects themselves (i.e., ids of the objects).
     """  
     def gt(self):
-        if len(self.opstack) > 1:
+        if not len(self.opstack) > 1:
+            print("Error: gt expects 2 operands")
+        else: 
             op2 = self.opPop()
             op1 = self.opPop()
             if self.__samevalidtype:
@@ -231,16 +232,14 @@ class PSOperators:
             else:
                 print("Error: gt - operands are different or invalid types")
                 self.opPush(op1)
-                self.opPush(op2)     
-        else:
-            print("Error: gt expects 2 operands")
+                self.opPush(op2)  
 
     #------- Stack Manipulation and Print Operators --------------
     """
        This function implements the Postscript "pop operator". Calls self.opPop() to pop the top value from the opstack and discards the value. 
     """
     def pop(self):
-        if (len(self.opstack) > 0):
+        if self.opstack:
             self.opPop()
         else:
             print("Error: pop - not enough arguments")
@@ -262,27 +261,28 @@ class PSOperators:
        Copies the top element in opstack.
     """
     def dup(self):
-        if self.opstack:
-            lst = self.opstack[-1]
-            self.opPush(lst)
-        else:
+        if not self.opstack:
             print("Error: dup - not enough arguments")
+        else:
+            last = self.opPop()
+            self.opPush(last)
+            self.opPush(last)
 
     """
        Pops an integer count from opstack, copies count number of values in the opstack. 
     """
     def copy(self):
-        if self.opstack:
+        if not self.opstack:
+            print("Error: copy - not enough arguments")
+        else:
             num = self.opPop()
             if not isinstance(num, int):
                 print("Error: copy - operand is not a number value")
             elif num > len(self.opstack):
                 print("Error: copy - not enough operands in opstack")
             else:
-                for cp in reversed(self.opstack[:num]):
+                for cp in self.opstack[-num:]:
                     self.opPush(cp)
-        else:
-            print("Error: copy - not enough arguments")
 
     """
         Counts the number of elements in the opstack and pushes the count onto the top of the opstack.
@@ -301,39 +301,60 @@ class PSOperators:
        swaps the top two elements in opstack
     """
     def exch(self):
-        if len(self.opstack) > 1:
+        if not len(self.opstack) > 1:
+            print("Error: exch expects 2 operands")
+        else:
             op1 = self.opPop()
             op2 = self.opPop()
             
             self.opPush(op1)
             self.opPush(op2) 
-        else:
-            print("Error: exch expects 2 operands")
 
     # ------- String and Dictionary creator operators --------------
+    def __pack(self, instr: str) -> StringValue:
+        """ Packs an input string into a StringValue container with parenthesis delimiters """
+        return StringValue(f"({instr})")
 
     """ Creates a new empty string  pushes it on the opstack.
     Initializes the characters in the new string to \0 , i.e., ascii NUL """
     def string(self):
-        pass
+        if not self.opstack:
+            print("Error: string - not enough arguments")
+        else:
+            num = self.opPop()
+            if not isinstance(num, int):
+                print("Error: string - int argument expected")
+                self.opPush(num)
+            else:
+                self.opPush(self.__pack("\0" * num))
     
     """Creates a new empty dictionary, pushes it on the opstack """
     def psDict(self):
-        pass
+        if not self.opstack:
+            print("Error: dict - not enough arguments")
+        else:
+            num = self.opPop()
+            if not isinstance(num, int):
+                print("Error: dict - int argument expected")
+                self.opPush(num)
+            else:
+                self.opPush(DictionaryValue({}))
 
     # ------- String and Dictionary Operators --------------
     """ Pops a string or dictionary value from the operand stack and calculates the length of it. Pushes the length back onto the stack.
        The `length` method should support both DictionaryValue and StringValue values.
     """
     def length(self):
-        if self.opstack:
+        if not self.opstack:
+            print("Error: length - not enough arguments")
+        else:
             op = self.opPop()
-            if isinstance(op, StringValue) or isinstance(op, DictionaryValue):
+            if isinstance(op, StringValue):
                 self.opPush(op.length() - 2)
+            elif isinstance(op, DictionaryValue):
+                self.opPush(op.length())
             else:
                 print("Error: length - invalid argument type")
-        else:
-            print("Error: length - not enough arguments")
 
     """ Pops either:
          -  "A (zero-based) index and an StringValue value" from opstack OR 
@@ -342,7 +363,19 @@ class PSOperators:
         If the argument is an DictionaryValue, gets the value for the given `name` from DictionaryValue's dictionary value and pushes it onto the opstack
     """
     def get(self):
-        pass
+        if not len(self.opstack) > 1:
+            print("Error: get expects 2 operands")
+        else:
+            op2 = self.opPop()
+            op1 = self.opPop()
+
+            if isinstance(op1, StringValue) and isinstance(op2, int):
+                ascii = ord(op1.value[op2+1])
+                self.opPush(ascii)
+            elif isinstance(op1, DictionaryValue):
+                self.opPush(op1.value[op2])
+            else:
+                print("Error: get - expected StringValue and int, or DictionaryValue and name")
    
     """
     Pops either:
@@ -352,16 +385,41 @@ class PSOperators:
     If the argument is an DictionaryValue, adds (or updates) "name:item" in DictionaryValue's dictionary `value`.
     """
     def put(self):
-        pass
+        if not len(self.opstack) > 2:
+            print("Error: put expects 3 operands")
+        else:
+            item = self.opPop()
+            index = self.opPop()
+            op1 = self.opPop()
+
+            if isinstance(op1, StringValue) and isinstance(index, int):
+                s = list(op1.value)
+                s[index+1] = chr(item)
+                op1.value = "".join(s)
+            elif isinstance(op1, DictionaryValue):
+                op1.value[index] = item
+            else:
+                print("Error: put - expected StringValue and int, or DictionaryValue and name, with item")
 
     """
     getinterval is a string only operator, i.e., works only with StringValue values. 
-    Pops a `count`, a (zero-based) `index`, and an StringValue value from  opstack, and 
+    Pops a `count`, a (zero-based) `index`, and an StringValue value from opstack, and 
     extracts a substring of length count from the `value` of StringValue starting from `index`,
     pushes the substring back to opstack as a StringValue value. 
     """ 
     def getinterval(self):
-        pass
+        if not len(self.opstack) > 2:
+            print("Error: getinterval expects 3 operands")
+        else:
+            count = self.opPop()
+            index = self.opPop() + 1
+            strval = self.opPop()
+
+            if not (isinstance(strval, StringValue) and isinstance(index, int) and isinstance(count, int)):
+                print("Error: getinterval - expected StringValue and two int")
+            else:
+                substr = strval.value[index:index+count]
+                self.opPush(self.__pack(substr))
 
     """
     putinterval is a string only operator, i.e., works only with StringValue values. 
@@ -369,7 +427,19 @@ class PSOperators:
     replaces the slice in StringValue's `value` from `index` to `index`+len(substring)  with the given `substring`s value. 
     """
     def putinterval(self):
-        pass
+        if not len(self.opstack) > 2:
+            print("Error: putinterval expects 3 operands")
+        else:
+            substr = self.opPop()
+            index = self.opPop()
+            strval = self.opPop()
+
+            if not (isinstance(strval, StringValue) and isinstance(index, int) and isinstance(substr, StringValue)):
+                print("Error: putinterval - expected StringValue, int, and substring")
+            else:
+                mutable = list(strval.value)
+                mutable[index+1:index+substr.length()-1] = substr.value.strip("()")
+                strval.value = "".join(mutable)
 
     """
     search is a string only operator, i.e., works only with StringValue values. 
@@ -378,26 +448,69 @@ class PSOperators:
        - splits inputstr at the first occurence of delimeter and pushes the splitted strings to opstack as StringValue values;
        - pushes True 
     else,
-        - pushes  the original inputstr back to opstack
+        - pushes the original inputstr back to opstack
         - pushes False
     """
     def search(self):
-        pass
-
+        if not len(self.opstack) > 1:
+            print("Error: search expects 2 operands")
+        else:
+            op2 = self.opPop()
+            op1 = self.opPop()
+            
+            if not (isinstance(op1, StringValue) and isinstance(op2, StringValue)):
+                print("Error: search - one or both operands is not StringValue")
+                self.opPush(op1)
+                self.opPush(op2)
+            else:
+                raw1 = op1.value.strip('()')
+                raw2 = op2.value.strip('()')
+                if raw2 not in raw1:
+                    print("Error: search - operand 2 must exist in string 1")
+                    self.opPush(op1)
+                    self.opPush(False)
+                else:
+                    spl = raw1.split(raw2, 1)
+                    self.opPush(self.__pack(spl[1]))
+                    self.opPush(op2)
+                    self.opPush(self.__pack(spl[0]))
+                    
+                    self.opPush(True)
+            
     # ------- Operators that manipulate the dictstact --------------
     """ begin operator
         Pops a DictionaryValue value from opstack and pushes it's `value` to the dictstack."""
     def begin(self):
-        pass
+        if not self.opstack:
+            print("Error: begin - not enough arguments")
+        else:
+            op = self.opPop()
+
+            if not isinstance(op, DictionaryValue):
+                print("Error: begin - invalid argument type, expected DictionaryValue")
+            else:
+                self.dictPush(op.value)
 
     """ end operator
         Pops the top dictionary from dictstack."""
     def end(self):
-        pass
+        if not self.dictstack:
+            print("Error: end - dictionary stack is empty")
+        else:
+            return self.dictPop()
         
     """ Pops a name and a value from stack, adds the definition to the dictionary at the top of the dictstack. """
-    def psDef(self):
-        pass
+    def psDef(self):            
+        if not len(self.opstack) > 1:
+            print("Error: psDef - not enough arguments")
+        else:
+            if not self.dictstack:
+                self.dictstack.append({})
+
+            value = self.opPop()
+            name = self.opPop()
+
+            self.dictstack[-1][name] = value
 
     # ------- if/ifelse Operators --------------
     """ if operator
