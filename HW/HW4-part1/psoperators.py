@@ -38,8 +38,8 @@ class PSOperators:
             "ifelse":self.psIfelse,
             "for":self.psFor
         }
+
     #------- Operand Stack Helper Functions --------------
-    
     """
         Helper function. Pops the top value from opstack and returns it.
     """
@@ -60,8 +60,9 @@ class PSOperators:
        Helper function. Pops the top dictionary from dictstack and returns it.
     """  
     def dictPop(self):
+        # check if dictstack is empty
         if not self.dictstack:
-            print("Error: opPop - Operand stack is empty")
+            print("Error: dictPop - dictionary stack is empty")
         else:
             return self.dictstack.pop()
 
@@ -104,8 +105,6 @@ class PSOperators:
         print(f"Error: lookup failed - /{name} not found in dictionary stack")
         
     #------- Arithmetic Operators --------------
-
-
     def __bothnum(self, op1, op2) -> bool:
         """ Checks that both op1 and op2 are numerical (int) """
         return (isinstance(op1,int) or isinstance(op1,float)) and (isinstance(op2,int) or isinstance(op2,float))
@@ -122,7 +121,7 @@ class PSOperators:
             if self.__bothnum(op1, op2):
                 self.opPush(op1 + op2)
             else:
-                print("Error: add - one of the operands is not a number value")
+                print("Error: add - one of the operands is not a number")
                 self.opPush(op1)
                 self.opPush(op2)
 
@@ -138,7 +137,7 @@ class PSOperators:
             if self.__bothnum(op1, op2):
                 self.opPush(op1 - op2)
             else:
-                print("Error: sub - one of the operands is not a number value")
+                print("Error: sub - one of the operands is not a number")
                 self.opPush(op1)
                 self.opPush(op2)
 
@@ -154,7 +153,7 @@ class PSOperators:
             if self.__bothnum(op1, op2):
                 self.opPush(op1 * op2)
             else:
-                print("Error: mul - one of the operands is not a number value")
+                print("Error: mul - one of the operands is not a number")
                 self.opPush(op1)
                 self.opPush(op2)
 
@@ -171,13 +170,14 @@ class PSOperators:
             if self.__bothnum(op1, op2):
                 self.opPush(op1 % op2)
             else:
-                print("Error: mod - one of the operands is not a number value")
+                print("Error: mod - one of the operands is not a number")
                 self.opPush(op1)
                 self.opPush(op2)   
 
-    def __samevalidtype(self, op1, op2):
-        valid = [int, float, bool, StringValue, DictionaryValue]
-        return type(op1) in valid and type(op1) == type(op2)
+    def __samevalidtype(self, op1, op2) -> bool:
+        """ Check that op1 and op2 are int, float, bool, StringValue, or DictionaryValue, and are the same type """
+        valid_types = [int, float, bool, StringValue, DictionaryValue]
+        return type(op1) in valid_types and type(op1) == type(op2)
         
     
     """ Pops 2 values from stacks; if they are equal pushes True back onto stack, otherwise it pushes False.
@@ -191,10 +191,10 @@ class PSOperators:
         else:
             op2 = self.opPop()
             op1 = self.opPop()
-            if self.__samevalidtype:
+            if self.__samevalidtype(op1, op2):
                 self.opPush(op1 == op2)
             else:
-                print("Error: eq - operands are different or invalid types")
+                print(f"Error: eq - operands are different or invalid types, {type(op1)} and {type(op2)} given")
                 self.opPush(op1)
                 self.opPush(op2)
 
@@ -209,10 +209,10 @@ class PSOperators:
         else:
             op2 = self.opPop()
             op1 = self.opPop()
-            if self.__samevalidtype:
+            if self.__samevalidtype(op1, op2):
                 self.opPush(op1 < op2)
             else:
-                print("Error: lt - operands are different or invalid types")
+                print(f"Error: lt - operands are different or invalid types, {type(op1)} and {type(op2)} given")
                 self.opPush(op1)
                 self.opPush(op2)
 
@@ -227,10 +227,10 @@ class PSOperators:
         else: 
             op2 = self.opPop()
             op1 = self.opPop()
-            if self.__samevalidtype:
+            if self.__samevalidtype(op1, op2):
                 self.opPush(op1 > op2)
             else:
-                print("Error: gt - operands are different or invalid types")
+                print(f"Error: gt - operands are different or invalid types, {type(op1)} and {type(op2)} given")
                 self.opPush(op1)
                 self.opPush(op2)  
 
@@ -239,10 +239,10 @@ class PSOperators:
        This function implements the Postscript "pop operator". Calls self.opPop() to pop the top value from the opstack and discards the value. 
     """
     def pop(self):
-        if self.opstack:
-            self.opPop()
-        else:
+        if not self.opstack:
             print("Error: pop - not enough arguments")
+        else:
+            self.opPop()
 
     """
        Prints the opstack and dictstack. The end of the list is the top of the stack. 
@@ -264,6 +264,7 @@ class PSOperators:
         if not self.opstack:
             print("Error: dup - not enough arguments")
         else:
+            # get reference to top of stack, and push to stack twice
             last = self.opPop()
             self.opPush(last)
             self.opPush(last)
@@ -277,9 +278,9 @@ class PSOperators:
         else:
             num = self.opPop()
             if not isinstance(num, int):
-                print("Error: copy - operand is not a number value")
+                print(f"Error: copy - operand is not a number, {type(num)} given")
             elif num > len(self.opstack):
-                print("Error: copy - not enough operands in opstack")
+                print(f"Error: copy - not enough operands in opstack, {num} required, {len(self.opstack)} given")
             else:
                 for cp in self.opstack[-num:]:
                     self.opPush(cp)
@@ -323,7 +324,7 @@ class PSOperators:
         else:
             num = self.opPop()
             if not isinstance(num, int):
-                print("Error: string - int argument expected")
+                print(f"Error: string - int argument expected, {type(num)} given")
                 self.opPush(num)
             else:
                 self.opPush(self.__pack("\0" * num))
@@ -331,7 +332,7 @@ class PSOperators:
     """Creates a new empty dictionary, pushes it on the opstack """
     def psDict(self):
         if not self.opstack:
-            print("Error: dict - not enough arguments")
+            print(f"Error: dict - int argument expected, {type(num)} given")
         else:
             num = self.opPop()
             if not isinstance(num, int):
@@ -354,7 +355,7 @@ class PSOperators:
             elif isinstance(op, DictionaryValue):
                 self.opPush(op.length())
             else:
-                print("Error: length - invalid argument type")
+                print(f"Error: length - StringValue or DictionaryValue argument expected, {type(op)} given")
 
     """ Pops either:
          -  "A (zero-based) index and an StringValue value" from opstack OR 
@@ -370,12 +371,18 @@ class PSOperators:
             op1 = self.opPop()
 
             if isinstance(op1, StringValue) and isinstance(op2, int):
+                # convert character to ascii value
                 ascii = ord(op1.value[op2+1])
                 self.opPush(ascii)
             elif isinstance(op1, DictionaryValue):
-                self.opPush(op1.value[op2])
+                try:
+                    self.opPush(op1.value[op2])
+                except KeyError:
+                    # key not found in given dictionary
+                    self.opPush = op1
+                    self.opPush = op2
             else:
-                print("Error: get - expected StringValue and int, or DictionaryValue and name")
+                print(f"Error: get - expected StringValue and int, or DictionaryValue and name, given {type(op1)} and {type(op2)}")
    
     """
     Pops either:
@@ -393,13 +400,16 @@ class PSOperators:
             op1 = self.opPop()
 
             if isinstance(op1, StringValue) and isinstance(index, int):
-                s = list(op1.value)
-                s[index+1] = chr(item)
-                op1.value = "".join(s)
+                # convert string to list, which is mutable
+                mutable = list(op1.value)
+                # convert ascii int to char
+                mutable[index+1] = chr(item)
+                # convert list to string
+                op1.value = "".join(mutable)
             elif isinstance(op1, DictionaryValue):
                 op1.value[index] = item
             else:
-                print("Error: put - expected StringValue and int, or DictionaryValue and name, with item")
+                print(f"Error: put - expected StringValue and int, or DictionaryValue and name, with item, given {type(op1)} and {type(index)}")
 
     """
     getinterval is a string only operator, i.e., works only with StringValue values. 
@@ -412,12 +422,13 @@ class PSOperators:
             print("Error: getinterval expects 3 operands")
         else:
             count = self.opPop()
-            index = self.opPop() + 1
+            index = self.opPop() + 1 # increment substring for parenthesis delimiters
             strval = self.opPop()
 
             if not (isinstance(strval, StringValue) and isinstance(index, int) and isinstance(count, int)):
-                print("Error: getinterval - expected StringValue and two int")
+                print(f"Error: getinterval - expected StringValue and two int, given {type(strval)}, {type(index)}, and {type(count)}")
             else:
+                # slice string for new substring
                 substr = strval.value[index:index+count]
                 self.opPush(self.__pack(substr))
 
@@ -431,14 +442,18 @@ class PSOperators:
             print("Error: putinterval expects 3 operands")
         else:
             substr = self.opPop()
-            index = self.opPop()
+            index = self.opPop() + 1
             strval = self.opPop()
 
             if not (isinstance(strval, StringValue) and isinstance(index, int) and isinstance(substr, StringValue)):
-                print("Error: putinterval - expected StringValue, int, and substring")
+                print(f"Error: putinterval - expected StringValue, int, and substring, given {type(strval)}, {type(index)}, and {type(substr)}")
             else:
+                # convert string to list, which is mutable
                 mutable = list(strval.value)
-                mutable[index+1:index+substr.length()-1] = substr.value.strip("()")
+                # remove delimiters
+                raw = substr.value.strip("()")
+                mutable[index:index+substr.length()-2] = raw
+                # convert list to string
                 strval.value = "".join(mutable)
 
     """
@@ -463,15 +478,19 @@ class PSOperators:
                 self.opPush(op1)
                 self.opPush(op2)
             else:
+                # remove delimiters
                 raw1 = op1.value.strip('()')
                 raw2 = op2.value.strip('()')
+                # check op2 is substring of op2
                 if raw2 not in raw1:
                     print("Error: search - operand 2 must exist in string 1")
                     self.opPush(op1)
                     self.opPush(False)
                 else:
+                    # split by delimiter for first instance
                     spl = raw1.split(raw2, 1)
                     self.opPush(self.__pack(spl[1]))
+                    # push delimiter to stack
                     self.opPush(op2)
                     self.opPush(self.__pack(spl[0]))
                     
@@ -487,8 +506,9 @@ class PSOperators:
             op = self.opPop()
 
             if not isinstance(op, DictionaryValue):
-                print("Error: begin - invalid argument type, expected DictionaryValue")
+                print(f"Error: begin - expected DictionaryValue, given {type(op)}")
             else:
+                # get dictionary and push to stack
                 self.dictPush(op.value)
 
     """ end operator
@@ -502,8 +522,9 @@ class PSOperators:
     """ Pops a name and a value from stack, adds the definition to the dictionary at the top of the dictstack. """
     def psDef(self):            
         if not len(self.opstack) > 1:
-            print("Error: psDef - not enough arguments")
+            print("Error: psDef expects 2 operands")
         else:
+            # ensure at least one dictionary is in stack
             if not self.dictstack:
                 self.dictstack.append({})
 
