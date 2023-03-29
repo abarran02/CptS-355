@@ -7,7 +7,6 @@ class PSOperators:
         self.opstack = []  #assuming top of the stack is the end of the list
         self.dictstack = []  #assuming top of the stack is the end of the list
         # The environment that the REPL evaluates expressions in.
-        # Uncomment this dictionary in part2
         self.builtin_operators = {
             "add":self.add,
             "sub":self.sub,
@@ -536,17 +535,39 @@ class PSOperators:
     # ------- if/ifelse Operators --------------
     """ if operator
         Pops a CodeArrayValue object and a boolean value, if the value is True, executes (applies) the code array by calling apply.
-       Will be completed in part-2. 
     """
     def psIf(self):
-        pass
+        if not len(self.opstack) > 1:
+            print("Error: if expects 2 operands")
+        else:
+            codearray = self.opPop()
+            check = self.opPop()
+
+            if not (isinstance(check, bool) and isinstance(codearray, CodeArrayValue)):
+                print(f"Error: if - expected CodeArrayValue and boolean, given {type(codearray)} and {type(check)}")
+            else:
+                if check:
+                    codearray.apply(self)
 
     """ ifelse operator
         Pops two CodeArrayValue objects and a boolean value, if the value is True, executes (applies) the bottom CodeArrayValue otherwise executes the top CodeArrayValue.
-        Will be completed in part-2. 
     """
     def psIfelse(self):
-        pass
+        if not len(self.opstack) > 2:
+            print("Error: ifelse expects 3 operands")
+        else:
+            codearray_else = self.opPop()
+            codearray_if = self.opPop()
+            check = self.opPop()
+
+            if not (isinstance(check, bool) and isinstance(codearray_if, CodeArrayValue)
+                     and isinstance(codearray_else, CodeArrayValue)):
+                print(f"Error: ifelse - expected two CodeArrayValue and boolean, given {type(codearray_if)}, {type(codearray_else)} and {type(check)}")
+            else:
+                if check:
+                    codearray_if.apply(self)
+                else:
+                    codearray_else.apply(self)
 
 
     #------- Loop Operators --------------
@@ -555,17 +576,41 @@ class PSOperators:
        Pops a CodeArrayValue object, the end index (end), the increment (inc), and the begin index (begin) and 
        executes the code array for all loop index values ranging from `begin` to `end`. 
        Pushes the current loop index value to opstack before each execution of the CodeArrayValue. 
-       Will be completed in part-2. 
     """ 
     def psFor(self):
-        pass
+        if not len(self.opstack) > 3:
+            print("Error: for expects 4 operands")
+        else:
+            code_array = self.opPop()
+            end = self.opPop()
+            inc = self.opPop()
+            begin = self.opPop()
+
+            if not (isinstance(code_array, CodeArrayValue) and isinstance(end, int) 
+                    and isinstance(inc, int) and isinstance(begin, int)):
+                print("Error: for - expected CodeArrayValue and three int")
+            else:
+                # meets termination condition
+                if begin == end:
+                    pass
+                # increment is positive, terminates when i is greater than end
+                elif inc > 0:
+                    for i in range(begin, end + 1, inc):
+                        self.opPush(i)
+                        code_array.apply(self)
+                # increment is negative, terminates when i is less than end
+                elif inc < 0:
+                    for i in range(begin, end - 1, inc):
+                        self.opPush(i)
+                        code_array.apply(self)
+                else:
+                    print("Error: for - increment is zero, infinite loop")
 
     """ Cleans both stacks. """      
     def clearBoth(self):
         self.opstack[:] = []
         self.dictstack[:] = []
 
-    """ Will be needed for part2"""
     def cleanTop(self):
         if len(self.opstack)>1:
             if self.opstack[-1] is None:

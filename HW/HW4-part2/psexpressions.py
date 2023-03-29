@@ -2,6 +2,7 @@
 The code has been changed according to Postscript syntax. 
 https://creativecommons.org/licenses/by-sa/3.0/
 """
+
 class Expr:
     """
     When you type input into this interpreter, it is parsed (read) into an expression. 
@@ -46,7 +47,7 @@ class Literal(Expr):
 
     def eval(self, ps_env):
         """`ps_env` is the PSOperators object that include the `opstack` and `dictstack`. """
-        """TO-DO (part2)"""
+        ps_env.opPush(self.value)
         pass
 
     def __str__(self):
@@ -63,8 +64,8 @@ class PSString(Expr):
 
     def eval(self, ps_env):
         """`ps_env` is the PSOperators object that include the `opstack` and `dictstack`. """
-        """TO-DO (part2)"""
-        pass 
+        contain = StringValue(self.value)
+        ps_env.opPush(contain)
 
     def __str__(self):
         return str(self.value)
@@ -85,8 +86,17 @@ class PSName(Expr):
 
     def eval(self,ps_env):
         """`ps_env` is the PSOperators object that include the `opstack` and `dictstack`. """
-        """TO-DO (part2)"""
-        pass       
+        
+        if self.var_name[0] == '/':
+            ps_env.opPush(self.var_name)
+        elif self.var_name in ps_env.builtin_operators:
+            ps_env.builtin_operators[self.var_name]()
+        else:
+            lookup = ps_env.lookup(self.var_name)
+            if isinstance(lookup, CodeArrayValue):
+                lookup.apply(ps_env)
+            else:
+                ps_env.opPush(lookup)
 
     def __str__(self):
         return str(self.var_name)
@@ -102,8 +112,8 @@ class PSCodeArray(Expr):
 
     def eval(self, ps_env):
         """`ps_env` is the PSOperators object that include the `opstack` and `dictstack`. """
-        """TO-DO (part2)"""
-        pass
+        contain = CodeArrayValue(self.value)
+        ps_env.opPush(contain)
 
     def __str__(self):
         return str(self.value)
@@ -232,8 +242,8 @@ class CodeArrayValue(Value):
         self.body = body
 
     def apply(self, ps_env):
-        pass
-        # TO-DO in milestone2
+        for expr in self.body:
+            expr.eval(ps_env)
 
     def __str__(self):
         return "{}({})".format(type(self).__name__, self.body)

@@ -109,14 +109,43 @@ def read_block_expr(src):
 def read_expr(src):
     token = src.pop_first()
     if token is None:
-        raise SyntaxError('Incomplete expression')
-    # TO-DO  - complete the following; include each condition as an `elif` case.
+        return []
+        
     #   if the token is a literal return a `Literal` object having `value` token.
+    elif isinstance(token, int) or isinstance(token, bool):
+        return Literal(token)
     #   if the token is a string delimiter (i.e., '('), get all tokens until the matching ')' delimiter and combine them as a Python string; 
     #       create a PSString object having this string value. 
-    #   if the token is a name, create a PSName object having `var_name` token. 
+    elif token == '(':
+        str_list = []
+        while src.current() != ')':
+            if src.current() is None:
+                raise SyntaxError("String doesn't have a matching `)`!")
+            str_list.append(src.pop_first())
+        
+        # Pop the `)`
+        src.pop_first()
+        
+        str_list = list(map(str, str_list))
+        build = f"({' '.join(str_list)})"
+        return PSString(build)
+
     #   if the token is a code-array delimiter (i.e., '{'), get all tokens until the matching '}' delimiter and combine them as a Python list; 
-    #       create a PSCodeArray object having this list value.       
+    #       create a PSCodeArray object having this list value.   
+    elif token == '{':
+        expr_list = []
+        while src.current() != '}':
+            if src.current() is None:
+                raise SyntaxError("CodeArray doesn't have a matching `}`!")
+            expr_list.append(read_expr(src))
+        
+        # Pop the `}`
+        src.pop_first()
+        return PSCodeArray(expr_list)
+
+    #   if the token is a name, create a PSName object having `var_name` token. 
+    elif isinstance(token, str):
+        return PSName(token)
     else:
         raise SyntaxError("'{}' is not the start of an expression".format(token))
 
