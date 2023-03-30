@@ -43,7 +43,12 @@ class HW4Part2Tests(unittest.TestCase):
             'test29': [StringValue('(WSU)'), StringValue('(Go Cougs)')], 
             'test30': [120], 
             'test31': [720], 
-            'test32': [StringValue('(WSU)')]}
+            'test32': [StringValue('(WSU)')],
+            'test33': [8, 243],
+            'test34': [True, False],
+            'test35': [35, 5],
+            'test36': [True],
+            'test37': [StringValue('(wsu)')]}
 
     def compareObjectData(self,obj1,obj2):
         if type(obj1) != type(obj2):
@@ -576,7 +581,103 @@ class HW4Part2Tests(unittest.TestCase):
         for i in range(0,len(self.opstack_output[test_case])):
             self.assertTrue(self.compareObjectData(self.ps_env.opstack[i], self.opstack_output[test_case][i]))
 
+    def test_myinput1(self):
+        my_input1 = """
+            /exp {
+                0 dict
+                begin
+                    /base exch def
+                    /n exch def
+                    1
+                    n -1 1 { pop base mul } for
+                end
+            } def
+            3 2 exp
+            5 3 exp
+        """
+        test_case = 'test{}'.format(33)
+        expr_list = read(my_input1)
+        for expr in expr_list:
+            expr.eval(self.ps_env)
+        self.assertEqual(len(self.ps_env.opstack),len(self.opstack_output[test_case]))
+        for i in range(0,len(self.opstack_output[test_case])):
+            self.assertTrue(self.compareObjectData(self.ps_env.opstack[i], self.opstack_output[test_case][i]))
+    
+    def test_myinput2(self):
+        my_input2 = """
+            /even {
+                2 mod 0 eq
+            } def
+            16 even
+            3 even
+        """
+        test_case = 'test{}'.format(34)
+        expr_list = read(my_input2)
+        for expr in expr_list:
+            expr.eval(self.ps_env)
+        self.assertEqual(len(self.ps_env.opstack),len(self.opstack_output[test_case]))
+        for i in range(0,len(self.opstack_output[test_case])):
+            self.assertTrue(self.compareObjectData(self.ps_env.opstack[i], self.opstack_output[test_case][i]))
+    
+    def test_myinput3(self):
+        my_input3 = """
+            /abs {
+                0 dict begin
+                /n exch def
+                n 0 gt
+                { n }
+                { n -1 mul }
+                ifelse
+                end
+            } def
+            -35 abs
+            5 abs
+        """
+        test_case = 'test{}'.format(35)
+        expr_list = read(my_input3)
+        for expr in expr_list:
+            expr.eval(self.ps_env)
+        self.assertEqual(len(self.ps_env.opstack),len(self.opstack_output[test_case]))
+        for i in range(0,len(self.opstack_output[test_case])):
+            self.assertTrue(self.compareObjectData(self.ps_env.opstack[i], self.opstack_output[test_case][i]))
+    
+    def test_myinput4(self):
+        my_input4 = """
+            /and {
+                {
+                    { 1 0 gt }
+                    { pop -1 0 gt }
+                    ifelse
+                }
+                { pop -1 0 gt }
+                ifelse
+            } def
+            1 0 gt
+            1 0 gt
+            and
+        """
+        test_case = 'test{}'.format(36)
+        expr_list = read(my_input4)
+        for expr in expr_list:
+            expr.eval(self.ps_env)
+        self.assertEqual(len(self.ps_env.opstack),len(self.opstack_output[test_case]))
+        for i in range(0,len(self.opstack_output[test_case])):
+            self.assertTrue(self.compareObjectData(self.ps_env.opstack[i], self.opstack_output[test_case][i]))
 
+    def test_myinput5(self):
+        my_input4 = """
+            3 string dup 
+            0 119 put dup
+            1 115 put dup
+            2 117 put
+        """
+        test_case = 'test{}'.format(37)
+        expr_list = read(my_input4)
+        for expr in expr_list:
+            expr.eval(self.ps_env)
+        self.assertEqual(len(self.ps_env.opstack),len(self.opstack_output[test_case]))
+        for i in range(0,len(self.opstack_output[test_case])):
+            self.assertTrue(self.compareObjectData(self.ps_env.opstack[i], self.opstack_output[test_case][i]))
 
 if __name__ == '__main__':
     unittest.main()
