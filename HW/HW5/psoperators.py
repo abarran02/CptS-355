@@ -4,6 +4,7 @@ from psexpressions import StringValue, DictionaryValue, CodeArrayValue
 class PSOperators:
     def __init__(self, scoperule):
         self.scope = scoperule
+        self.current_scope = 0
         #stack variables
         self.opstack = []  #assuming top of the stack is the end of the list
         self.dictstack = []  #assuming top of the stack is the end of the list
@@ -62,6 +63,9 @@ class PSOperators:
         if not self.dictstack:
             print("Error: dictPop - dictionary stack is empty")
         else:
+            if self.scope == "static":
+                self.current_scope = self.dictstack[-1][0]
+
             return self.dictstack.pop()
 
     """
@@ -69,6 +73,9 @@ class PSOperators:
     """   
     def dictPush(self,index,d):
         self.dictstack.append( (index,d) )
+
+        if self.scope == "static":
+            self.current_scope = index
 
     """
        Helper function. Adds name:value pair to the top dictionary in the dictstack.
@@ -83,11 +90,11 @@ class PSOperators:
             top_tuple[1][name] = value
 
     """
-       Helper function. Searches the dictstack for a variable or function and returns its value. 
+       Helper function. Searches the dictstack for a variable or function and returns a tuple of its static-link-index and its value. 
        (Starts searching at the top of the dictstack; if name is not found returns None and prints an error message.
         Make sure to add '/' to the begining of the name.)
     """
-    def lookup(self, name):
+    def lookup(self, name) -> tuple:
         # check if dictstack is empty
         if not self.dictstack:
             print("Error: lookup failed - dictionary stack is empty")
@@ -98,26 +105,26 @@ class PSOperators:
             for d_tuple in reversed(self.dictstack):
                 # attempt to return matching value, otherwise iterate
                 try:
-                    return d_tuple[1]['/' + name]
+                    return (0, d_tuple[1]['/' + name])
                 except KeyError:
                     pass
         else:
-            # get top of stack
-            current = self.dictstack[-1]
-            next = -1
+            # get top of stack, not just -1 in case of return in first iteration
+            current_index = len(self.dictstack) - 1
             # while current is not bottom of stack and doesn't point to itself
             while True:
+                current_reference = self.dictstack[current_index]
                 try:
-                    return current[1]['/' + name]
+                    return (current_index, current_reference[1]['/' + name])
                 except KeyError:
                     pass
 
-                # check if current points to itself
-                next = current[0]
-                if current is self.dictstack[next]:
+                # check if current_reference points to itself
+                current_index = current_reference[0]
+                if current_reference is self.dictstack[current_index]:
                     break
                 else:
-                    current = self.dictstack[next]
+                    current_reference = self.dictstack[current_index]
 
         print(f"Error: lookup failed - /{name} not found in dictionary stack")
         
@@ -350,11 +357,11 @@ class PSOperators:
     """Creates a new empty dictionary, pushes it on the opstack """
     def psDict(self):
         if not self.opstack:
-            print(f"Error: dict - int argument expected, {type(num)} given")
+            print("Error: dict - not enough arguments")
         else:
             num = self.opPop()
             if not isinstance(num, int):
-                print("Error: dict - int argument expected")
+                print(f"Error: dict - int argument expected, {type(num)} given")
                 self.opPush(num)
             else:
                 self.opPush(DictionaryValue({}))
@@ -540,7 +547,7 @@ class PSOperators:
                 print(f"Error: if - expected CodeArrayValue and boolean, given {type(codearray)} and {type(check)}")
             else:
                 if check:
-                    self.dictPush(0,{})
+                    self.dictPush(self.current_scope,{})
                     codearray.apply(self)
                     self.dictPop()
 
@@ -559,7 +566,7 @@ class PSOperators:
                      and isinstance(codearray_else, CodeArrayValue)):
                 print(f"Error: ifelse - expected two CodeArrayValue and boolean, given {type(codearray_if)}, {type(codearray_else)} and {type(check)}")
             else:
-                self.dictPush(0,{})
+                self.dictPush(self.current_scope,{})
                 if check:
                     codearray_if.apply(self)
                 else:
@@ -569,6 +576,16 @@ class PSOperators:
 
 
     #------- Loop Operators --------------
+    def for_body(self, code_array, i):
+        """Executed for each iteration of a for loop"""
+        if self.scope == "dynamic":
+            self.dictPush(0,{})
+        else:
+            self.dictPush(self.current_scope,{})
+        self.opPush(i)
+        code_array.apply(self)
+        self.dictPop()
+    
     """
        Implements for operator.   
        Pops a CodeArrayValue object, the end index (end), the increment (inc), and the begin index (begin) and 
@@ -594,17 +611,11 @@ class PSOperators:
                 # increment is positive, terminates when i is greater than end
                 elif inc > 0:
                     for i in range(begin, end + 1, inc):
-                        self.dictPush(0,{})
-                        self.opPush(i)
-                        code_array.apply(self)
-                        self.dictPop()
+                        self.for_body(code_array, i)
                 # increment is negative, terminates when i is less than end
                 elif inc < 0:
                     for i in range(begin, end - 1, inc):
-                        self.dictPush(0,{})
-                        self.opPush(i)
-                        code_array.apply(self)
-                        self.opPush(i)
+                        self.for_body(code_array, i)
                 else:
                     print("Error: for - increment is zero, infinite loop")
 

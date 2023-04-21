@@ -92,13 +92,19 @@ class PSName(Expr):
         elif self.var_name in ps_env.builtin_operators:
             ps_env.builtin_operators[self.var_name]()
         else:
-            lookup = ps_env.lookup(self.var_name)
-            if isinstance(lookup, CodeArrayValue):
-                ps_env.dictPush(0,{})
-                lookup.apply(ps_env)
+            # lookup variable name and unpack return tuple
+            index, value = ps_env.lookup(self.var_name)
+            if isinstance(value, CodeArrayValue):
+                # determine static-link-index for each scoping rule
+                if ps_env.scope == "dynamic":
+                    ps_env.dictPush(0,{})
+                else:
+                    ps_env.dictPush(index,{})
+                
+                value.apply(ps_env)
                 ps_env.dictPop()
             else:
-                ps_env.opPush(lookup)
+                ps_env.opPush(value)
 
     def __str__(self):
         return str(self.var_name)
