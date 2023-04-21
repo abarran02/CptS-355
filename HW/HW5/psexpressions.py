@@ -94,7 +94,9 @@ class PSName(Expr):
         else:
             lookup = ps_env.lookup(self.var_name)
             if isinstance(lookup, CodeArrayValue):
+                ps_env.dictPush(0,{})
                 lookup.apply(ps_env)
+                ps_env.dictPop()
             else:
                 ps_env.opPush(lookup)
 

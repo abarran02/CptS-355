@@ -67,8 +67,8 @@ class PSOperators:
     """
        Helper function. Pushes the given dictionary onto the dictstack. 
     """   
-    def dictPush(self,d):
-        self.dictstack.append(d)
+    def dictPush(self,index,d):
+        self.dictstack.append( (index,d) )
 
     """
        Helper function. Adds name:value pair to the top dictionary in the dictstack.
@@ -77,9 +77,10 @@ class PSOperators:
     def define(self, name, value):
         # check if dictstack is empty
         if not self.dictstack:
-            self.dictstack.append({name:value})
+            self.dictPush(0, {name:value})
         else:
-            self.dictstack[-1][name] = value
+            top_tuple = self.dictstack[-1]
+            top_tuple[1][name] = value
 
     """
        Helper function. Searches the dictstack for a variable or function and returns its value. 
@@ -92,13 +93,31 @@ class PSOperators:
             print("Error: lookup failed - dictionary stack is empty")
             return None
 
-        # using the end of dictstack as top of stack, search for matching name
-        for d in reversed(self.dictstack):
-            # attempt to return matching value, otherwise iterate
-            try:
-                return d['/' + name]
-            except KeyError:
-                pass
+        if self.scope == "dynamic":
+            # using the end of dictstack as top of stack, search for matching name
+            for d_tuple in reversed(self.dictstack):
+                # attempt to return matching value, otherwise iterate
+                try:
+                    return d_tuple[1]['/' + name]
+                except KeyError:
+                    pass
+        else:
+            # get top of stack
+            current = self.dictstack[-1]
+            next = -1
+            # while current is not bottom of stack and doesn't point to itself
+            while True:
+                try:
+                    return current[1]['/' + name]
+                except KeyError:
+                    pass
+
+                # check if current points to itself
+                next = current[0]
+                if current is self.dictstack[next]:
+                    break
+                else:
+                    current = self.dictstack[next]
 
         print(f"Error: lookup failed - /{name} not found in dictionary stack")
         
@@ -246,14 +265,15 @@ class PSOperators:
        Prints the opstack and dictstack. The end of the list is the top of the stack. 
     """
     def stack(self):
-        print(OKGREEN+"**opstack**")
+        print(OKGREEN+"===**opstack**===")
         for item in reversed(self.opstack):
             print(item)
-        print("-----------------------"+CEND)
-        print(RED+"**dictstack**")
-        for item in reversed(self.dictstack):
-            print(item)
-        print("-----------------------"+ CEND)
+        print(RED+"===**dictstack**===")
+        for index in reversed(range(len(self.dictstack))):
+            print(f"----{index}----{self.dictstack[index][0]}----")
+            for (key, value) in self.dictstack[index][1].items():
+                print(f"{key}   {value}")
+        print("================="+ CEND)
 
     """
        Copies the top element in opstack.
@@ -500,14 +520,10 @@ class PSOperators:
         if not len(self.opstack) > 1:
             print("Error: psDef expects 2 operands")
         else:
-            # ensure at least one dictionary is in stack
-            if not self.dictstack:
-                self.dictstack.append({})
-
             value = self.opPop()
             name = self.opPop()
 
-            self.dictstack[-1][name] = value
+            self.define(name, value)
 
     # ------- if/ifelse Operators --------------
     """ if operator
@@ -524,7 +540,9 @@ class PSOperators:
                 print(f"Error: if - expected CodeArrayValue and boolean, given {type(codearray)} and {type(check)}")
             else:
                 if check:
+                    self.dictPush(0,{})
                     codearray.apply(self)
+                    self.dictPop()
 
     """ ifelse operator
         Pops two CodeArrayValue objects and a boolean value, if the value is True, executes (applies) the bottom CodeArrayValue otherwise executes the top CodeArrayValue.
@@ -541,10 +559,13 @@ class PSOperators:
                      and isinstance(codearray_else, CodeArrayValue)):
                 print(f"Error: ifelse - expected two CodeArrayValue and boolean, given {type(codearray_if)}, {type(codearray_else)} and {type(check)}")
             else:
+                self.dictPush(0,{})
                 if check:
                     codearray_if.apply(self)
                 else:
                     codearray_else.apply(self)
+                
+                self.dictPop()
 
 
     #------- Loop Operators --------------
@@ -573,13 +594,17 @@ class PSOperators:
                 # increment is positive, terminates when i is greater than end
                 elif inc > 0:
                     for i in range(begin, end + 1, inc):
+                        self.dictPush(0,{})
                         self.opPush(i)
                         code_array.apply(self)
+                        self.dictPop()
                 # increment is negative, terminates when i is less than end
                 elif inc < 0:
                     for i in range(begin, end - 1, inc):
+                        self.dictPush(0,{})
                         self.opPush(i)
                         code_array.apply(self)
+                        self.opPush(i)
                 else:
                     print("Error: for - increment is zero, infinite loop")
 
