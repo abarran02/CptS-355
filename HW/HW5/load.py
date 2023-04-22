@@ -77,8 +77,38 @@ testinput8 = """
     B
     """
 
+my_input1 = """
+    /exp {
+        /base 5 def
+        1
+        n -1 1 { pop base mul } for
+        stack
+    } def
+    /base 2 def
+    /n 3 def
+    exp
+"""
 
-tests = [testinput1,testinput2,testinput3,testinput4,testinput5,testinput6,testinput7,testinput8]
+my_input2 = """
+    /even {
+        2 mod 0 eq stack
+    } def
+    3 even 
+"""
+
+my_input3 = """
+    /abs {
+        a 0 gt
+        { a }
+        { a -1 mul stack }
+        ifelse
+    } def
+    /a -35 def
+    abs
+"""
+
+
+tests = [testinput1,testinput2,testinput3,testinput4,testinput5,testinput6,testinput7,testinput8,my_input1,my_input2,my_input3]
 
 # program start
 if __name__ == '__main__':
